@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <collaboration id="Collaboration">
+    <participant id="Pool" name="Dar Attributes" processRef="darAttributes"></participant>
+  </collaboration>
+  <process id="darAttributes" name="Create Data Acquisition Request" isExecutable="true">
+    <documentation>Launches the workflow to Create a new Data Acquisition Request</documentation>
+    <laneSet id="laneSet_darAttributes">
+      <lane id="lane1">
+        <flowNodeRef>startevent1</flowNodeRef>
+        <flowNodeRef>servicetask1</flowNodeRef>
+        <flowNodeRef>endevent1</flowNodeRef>
+        <flowNodeRef>servicetask2</flowNodeRef>
+        <flowNodeRef>timerintermediatecatchevent1</flowNodeRef>
+        <flowNodeRef>scripttask1</flowNodeRef>
+        <flowNodeRef>timerintermediatecatchevent2</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="startevent1" name="Start" activiti:initiator="startUser">
+      <extensionElements>
+        <activiti:formProperty id="signifier" name="&lt;abbr title=&quot;Business Name that uniquely identifies the Data Acquisition Request.&quot;&gt;&lt;b&gt;Name&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="description" name="&lt;abbr title=&quot;The description of the asset. This is typically a more verbose way to describe what the asset means&quot;&gt;&lt;b&gt;Description&lt;/b&gt;&lt;/abbr&gt;&lt;/abbr&gt;" type="textarea"></activiti:formProperty>
+        <activiti:formProperty id="purpose" name="&lt;abbr title=&quot;The reason why the asset or usage exists.&quot;&gt;&lt;b&gt;Purpose&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="textarea" required="true"></activiti:formProperty>
+        <activiti:formProperty id="targetDateForResolution" name="&lt;abbr title=&quot;Target date for resolution&quot;&gt;&lt;b&gt;Target Date for Resolution&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="datetime" required="true"></activiti:formProperty>
+        <activiti:formProperty id="lobIsRequestedByDAR" name="&lt;abbr title=&quot;DAR is Requested By Line of Business&quot;&gt;&lt;b&gt;Requested By LOB&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="term" required="true">
+          <activiti:value id="conceptType" name="00000000-0000-0000-0000-000000031110"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="associatedWithDataUsageCategory" name="&lt;abbr title=&quot;Data Acquisition Request is associated with a Data Usage Category&quot;&gt;&lt;b&gt;Associated with Data Usage Category&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="term" required="true">
+          <activiti:value id="conceptType" name="77894f38-183c-4b27-baf2-7065eefb8a38"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="vDomain" name="Domain Type" type="string" default="7a414333-9cd5-48f6-8233-1615735cd1fa" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="conceptType" name="Asset Type Id" type="string" default="ac3e5bc7-37b4-413c-a4ff-7b49464b11b4" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="timer" name="Timer" type="string" default="PT2S" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="timer1" name="Timer1" type="string" default="PT2S" readable="false"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <serviceTask id="servicetask1" name="Create DAR Asset" activiti:expression="${termComponent.addTerm(vocabularyComponent.getVocabulary(vDomain).getId(),signifier,conceptType).getId()}" activiti:resultVariableName="newTerm"></serviceTask>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="servicetask1"></sequenceFlow>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <sequenceFlow id="flow2" sourceRef="timerintermediatecatchevent1" targetRef="scripttask1"></sequenceFlow>
+    <serviceTask id="servicetask2" name="Start approval of DAR Workflow" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StartWorkflowInstanceDelegate">
+      <extensionElements>
+        <activiti:field name="processId">
+          <activiti:string><![CDATA[approvalofDAR1]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="resourceId">
+          <activiti:expression><![CDATA[${newTerm}]]></activiti:expression>
+        </activiti:field>
+        <activiti:field name="resourceType">
+          <activiti:string><![CDATA[TE]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow4" sourceRef="servicetask2" targetRef="endevent1"></sequenceFlow>
+    <intermediateCatchEvent id="timerintermediatecatchevent1" name="TimerCatchEvent">
+      <timerEventDefinition>
+        <timeDuration>${timer}</timeDuration>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <sequenceFlow id="flow5" sourceRef="servicetask1" targetRef="timerintermediatecatchevent1"></sequenceFlow>
+    <scriptTask id="scripttask1" name="Add Characterstics to DAR" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script>loggerComponent.info("New TERM Id "+newTerm)
+attributeComponent.addDescription(newTerm,description.toString())
+def currentDate = new Date()
+long currDateVal = ((long)(new Date().getTime() / (24L * 60L * 60L * 1000L))) * (24L * 60L * 60L * 1000L);
+loggerComponent.info("Target Date: "+targetDateForResolution)
+loggerComponent.info("Target Date: "+targetDateForResolution.toTimestamp())
+loggerComponent.info("Target Date: "+targetDateForResolution.toTimestamp().getTime())
+loggerComponent.info("Current Date: "+currentDate)
+loggerComponent.info("Current Date: "+currDateVal)
+attributeComponent.addDateAttribute(newTerm,'ae6acd87-18b3-471e-80a9-8ca2d22a7828',currDateVal.toString()) 
+attributeComponent.addStringAttribute(newTerm,'00000000-0000-0000-0000-000000000207',purpose.toString())
+def sqlTimestamp1 = targetDateForResolution.toTimestamp()
+attributeComponent.addDateAttribute(newTerm,'77dc6bbe-7d9a-407d-8b4f-f55df7ac7e15',sqlTimestamp1.getTime().toString())
+loggerComponent.info("associatedWithDataUsageCategoryID "+associatedWithDataUsageCategory.toString())
+loggerComponent.info("lobIsRequestedByDAR "+lobIsRequestedByDAR.toString())
+relationComponent.addRelation(associatedWithDataUsageCategory,'16d88607-fd8c-468f-aaa7-0c424b70ab23',newTerm,null,null)
+relationComponent.addRelation(lobIsRequestedByDAR,'f8d10585-34b7-4f76-9fe4-e614a7d113d7',newTerm,null,null)
+
+//Add start user as PTS
+def startUserId = userComponent.getUserByName(startUser).getId();
+rightsComponent.addMember(startUserId,'cc89546a-bbc6-42b6-b68b-199a7dc32982', newTerm) ;
+loggerComponent.info("Added Start User as PTS");</script>
+    </scriptTask>
+    <sequenceFlow id="flow3" sourceRef="timerintermediatecatchevent2" targetRef="servicetask2"></sequenceFlow>
+    <intermediateCatchEvent id="timerintermediatecatchevent2" name="TimerCatchEvent">
+      <timerEventDefinition>
+        <timeDuration>${timer1}</timeDuration>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <sequenceFlow id="flow6" sourceRef="scripttask1" targetRef="timerintermediatecatchevent2"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collaboration">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration" id="BPMNPlane_Collaboration">
+      <bpmndi:BPMNShape bpmnElement="Pool" id="BPMNShape_Pool">
+        <omgdc:Bounds height="161.0" width="791.0" x="110.0" y="70.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane1" id="BPMNShape_lane1">
+        <omgdc:Bounds height="161.0" width="771.0" x="130.0" y="70.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="160.0" y="133.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="250.0" y="123.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="840.0" y="133.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask2" id="BPMNShape_servicetask2">
+        <omgdc:Bounds height="61.0" width="105.0" x="690.0" y="120.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="timerintermediatecatchevent1" id="BPMNShape_timerintermediatecatchevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="400.0" y="133.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
+        <omgdc:Bounds height="61.0" width="105.0" x="480.0" y="120.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="timerintermediatecatchevent2" id="BPMNShape_timerintermediatecatchevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="620.0" y="133.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="195.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="250.0" y="150.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="435.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="480.0" y="150.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="795.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="840.0" y="150.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="355.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="400.0" y="150.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="655.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="690.0" y="150.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="585.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="620.0" y="150.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

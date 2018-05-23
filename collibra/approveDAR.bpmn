@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <collaboration id="Collaboration">
+    <participant id="pool1" name="Data Acqusition Request Approval" processRef="approvalofDAR1"></participant>
+  </collaboration>
+  <process id="approvalofDAR1" name="Approve Data Acquisition Request" isExecutable="true">
+    <documentation>Launches the workflow to approve the new Data Acquisition Request</documentation>
+    <laneSet id="laneSet_approvalofDAR1">
+      <lane id="lane1" name="Performing Technical Steward ">
+        <flowNodeRef>startevent1</flowNodeRef>
+        <flowNodeRef>scripttask1</flowNodeRef>
+        <flowNodeRef>usertask2</flowNodeRef>
+        <flowNodeRef>servicetask1</flowNodeRef>
+        <flowNodeRef>servicetask5</flowNodeRef>
+        <flowNodeRef>scripttask4</flowNodeRef>
+        <flowNodeRef>scripttask5</flowNodeRef>
+        <flowNodeRef>exclusivegateway1</flowNodeRef>
+        <flowNodeRef>mailtask3</flowNodeRef>
+      </lane>
+      <lane id="lane2" name="Data Governance Office">
+        <flowNodeRef>usertask1</flowNodeRef>
+        <flowNodeRef>endevent1</flowNodeRef>
+        <flowNodeRef>servicetask2</flowNodeRef>
+        <flowNodeRef>mailtask2</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="startevent1" name="Start" activiti:initiator="startUser">
+      <extensionElements>
+        <activiti:formProperty id="PerformingDGSteward" name="Data Governance Office" type="string" default="role(Data Governance Office)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="techSteward" name="Performing Technical Steward" type="string" default="role(Performing Technical Steward)" readable="false"></activiti:formProperty>
+        <activiti:formProperty id="imrform1" name="IMR form1" type="string" default="&lt;abbr title=&quot;Describes the details for masking&quot;&gt;&lt;b&gt;Details For Masking&lt;/b&gt;" readable="false"></activiti:formProperty>
+      </extensionElements>
+    </startEvent>
+    <scriptTask id="scripttask1" name="Add Characterstics to DAR form2" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script>loggerComponent.info("update Values")
+attributeComponent.addStringAttribute(item.id,'e3a8bc4c-b22b-452b-b007-1cd461d8d45d',missingattributes.toString())
+attributeComponent.addStringAttribute(item.id,'f99ec98f-4360-4958-af50-a530a1d1a1fa',snTicketNo.toString())
+attributeComponent.addSingleValueListAttribute(item.id,'669af425-fe54-422c-bf3f-bbc1df666773',ongoingIngestionPlan.toString())
+attributeComponent.addSingleValueListAttribute(item.id,'80defd5d-d0c2-48c5-9012-75faf596e57a',frequencyofLoad.toString())
+attributeComponent.addSingleValueListAttribute(item.id,'809ba43e-fcae-4d38-a06e-990af92ca666',isMaskingRequired.toString())
+attributeComponent.addStringAttribute(item.id,'8acb4966-7124-481b-b18e-cac1f561c720',detailsForMasking.toString())
+attributeComponent.addNote(item.id,note.toString())
+loggerComponent.info("darRequiresTablesID "+darRequiresTables.toString())
+loggerComponent.info("targetSystemID "+targetSystem.toString())
+
+def s2=[]
+def j=0
+s2=utility.toList(execution.getVariable("darRequiresTables"))
+if(!s2.isEmpty())
+{
+s2.each()
+{
+relationComponent.addRelation(item.id,'c8e79c35-c753-41f4-9ff4-c53b2da48780',s2[j],null,null)
+j++
+}
+}
+
+relationComponent.addRelation(targetSystem,'05bd3da3-059b-4027-b98d-aa051ed20f01',item.id,null,null)
+
+</script>
+    </scriptTask>
+    <sequenceFlow id="flow1" sourceRef="exclusivegateway1" targetRef="scripttask1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${imrStats}]]></conditionExpression>
+    </sequenceFlow>
+    <userTask id="usertask1" name="DAR Review" activiti:candidateUsers="${PerformingDGSteward}">
+      <documentation>Please mark the Data Acquisition Request as “Completed” or notify the appropriate person to address any issues.</documentation>
+      <extensionElements>
+        <activiti:formProperty id="comment" name="&lt;b&gt;Comment&lt;/b&gt;" type="textarea"></activiti:formProperty>
+        <activiti:formProperty id="approve" name="Complete" type="button"></activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <userTask id="usertask2" name="DAR Required Information" activiti:candidateUsers="${techSteward}">
+      <documentation>Please enter the additional Information</documentation>
+      <extensionElements>
+        <activiti:formProperty id="signifier" name="&lt;abbr title=&quot;Business Name that uniquely identifies the Data Acquisition Request.&quot;&gt;&lt;b&gt;Name&lt;/b&gt;" type="string" default="${cName}" writable="false"></activiti:formProperty>
+        <activiti:formProperty id="missingattributes" name="&lt;abbr title=&quot;Provide list of missing data elements or any other gaps&quot;&gt;&lt;b&gt;Required Data Elements&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="textarea" required="true"></activiti:formProperty>
+        <activiti:formProperty id="ongoingIngestionPlan" name="&lt;abbr title=&quot;Identify criteria for the ongoing ingestion plan&quot;&gt;&lt;b&gt;Ongoing Ingestion Plan&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="enum" required="true">
+          <activiti:value id="Adding elements to existing feed" name="Adding elements to existing feed"></activiti:value>
+          <activiti:value id="New feed" name="New feed"></activiti:value>
+          <activiti:value id="Delta feed" name="Delta feed"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="snTicketNo" name="&lt;abbr title=&quot;Service Now Ticket Numer&quot;&gt;&lt;b&gt;Service Now Ticket Number&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="string" required="true"></activiti:formProperty>
+        <activiti:formProperty id="frequencyofLoad" name="&lt;abbr title=&quot;What is the frequency that the source data needs to be loaded into the Enterprise Data Hub?&quot;&gt;&lt;b&gt;Frequency of Load&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="enum" required="true">
+          <activiti:value id="Intraday" name="Intraday"></activiti:value>
+          <activiti:value id="Daily" name="Daily"></activiti:value>
+          <activiti:value id="Weekly" name="Weekly"></activiti:value>
+          <activiti:value id="Monthly" name="Monthly"></activiti:value>
+          <activiti:value id="Quarterly" name="Quarterly"></activiti:value>
+          <activiti:value id="Annually" name="Annually"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="isMaskingRequired" name="&lt;abbr title=&quot;Is Masking Required&quot;&gt;&lt;b&gt;Is Masking Required&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="enum" required="true">
+          <activiti:value id="Yes" name="Yes"></activiti:value>
+          <activiti:value id="No" name="No"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="detailsForMasking" name="${imrform1}" type="textarea" default="Not Applicable" required="true"></activiti:formProperty>
+        <activiti:formProperty id="note" name="&lt;abbr title=&quot;A note.&quot;&gt;&lt;b&gt;Note&lt;/b&gt;&lt;/abbr&gt;" type="textarea"></activiti:formProperty>
+        <activiti:formProperty id="targetSystem" name="&lt;abbr title=&quot;System is target of Data Acquisition Request.&quot;&gt;&lt;b&gt;Target System&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="term" required="true">
+          <activiti:value id="conceptType" name="00000000-0000-0000-0000-000000031302"></activiti:value>
+        </activiti:formProperty>
+        <activiti:formProperty id="darRequiresTables" name="&lt;abbr title=&quot;Data Acquisition Request requires one or more Tables&quot;&gt;&lt;b&gt;Requires tables&lt;/b&gt;&lt;font color=&quot;red&quot;&gt;*&lt;/font&gt;&lt;/abbr&gt;" type="term" required="true">
+          <activiti:value id="multiValue" name="true"></activiti:value>
+          <activiti:value id="conceptType" name="00000000-0000-0000-0000-000000031007"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </userTask>
+    <sequenceFlow id="flow5" sourceRef="scripttask4" targetRef="usertask2"></sequenceFlow>
+    <sequenceFlow id="flow7" sourceRef="usertask1" targetRef="scripttask2"></sequenceFlow>
+    <serviceTask id="servicetask1" name="State Changer to Draft" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[a895df61-dfa8-4d3b-ab3c-be9d49ad96e5]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow12" sourceRef="startevent1" targetRef="servicetask1"></sequenceFlow>
+    <sequenceFlow id="flow13" sourceRef="scripttask1" targetRef="servicetask2"></sequenceFlow>
+    <serviceTask id="servicetask2" name="State Changer to DGO Review" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[00000000-0000-0000-0000-000000005019]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow14" sourceRef="servicetask2" targetRef="usertask1"></sequenceFlow>
+    <serviceTask id="mailtask2" name="Task Completed and sent to Start User" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression><![CDATA[${techSteward}]]></activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[no-reply@collibra.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:string><![CDATA[Data Governance DAR Completed]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression><![CDATA[Hello,<br/><br/>
+
+DAR <b><a href="${item.url}"> ${item.name}</a></b> has been Completed by Data Governance.<br/><br/>
+Please contact the Data Governance team with any questions at: <u>DataGovernance@leggmason.com</u>
+
+<br/><br/>
+Thank you,<br/>
+Legg Mason Data Governance]]></activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow21" sourceRef="mailtask2" targetRef="servicetask5"></sequenceFlow>
+    <serviceTask id="servicetask5" name="State Changer Completed" activiti:class="com.collibra.dgc.core.workflow.activiti.delegate.StateChanger">
+      <extensionElements>
+        <activiti:field name="targetState">
+          <activiti:string><![CDATA[ad746620-5e10-4879-a214-3fba067805cc]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow19" sourceRef="servicetask5" targetRef="endevent1"></sequenceFlow>
+    <scriptTask id="scripttask2" name="Store DAR Review" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script>loggerComponent.info('**********Add Comments Start***************');
+
+if(comment.toString()) {
+    commentComponent.addComment(item.id, 'TE', 'Data Governance Office  Comments: '+comment.toString());
+}
+
+
+loggerComponent.info('**********Add Comments End***************');
+</script>
+    </scriptTask>
+    <scriptTask id="scripttask4" name="Get Item Name" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script>def name=item.name
+loggerComponent.info("Name:"+name.toString())
+execution.setVariable("cName",name.toString())</script>
+    </scriptTask>
+    <sequenceFlow id="flow24" sourceRef="mailtask3" targetRef="scripttask4"></sequenceFlow>
+    <sequenceFlow id="flow25" name="Completed" sourceRef="scripttask2" targetRef="mailtask2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${approve}]]></conditionExpression>
+    </sequenceFlow>
+    <scriptTask id="scripttask5" name="Is Masking Required" scriptFormat="groovy" activiti:autoStoreVariables="false">
+      <script>loggerComponent.info("isMaskingRequired: "+isMaskingRequired)
+loggerComponent.info("detailsForMasking: "+detailsForMasking.toString().trim())
+
+if((isMaskingRequired=='Yes')&amp;&amp;(detailsForMasking.toString().trim()=='Not Applicable')) {
+	execution.setVariable("imrStats",false)
+	def desc1="&lt;abbr title=Describes the details for masking&gt;&lt;b&gt;Details For Masking&lt;/b&gt;&lt;/abbr&gt;&lt;br/&gt;(&lt;font color=red&gt;&lt;b&gt;Please Update the value  for Details for Masking&lt;/b&gt;&lt;/font&gt;)"
+	execution.setVariable("imrform1",desc1)
+	loggerComponent.info("isMaskingRequired1: "+imrStats)
+}
+else{
+	execution.setVariable("imrStats",true)
+	loggerComponent.info("imrform1: "+imrform1)
+	
+}</script>
+    </scriptTask>
+    <sequenceFlow id="flow26" sourceRef="usertask2" targetRef="scripttask5"></sequenceFlow>
+    <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>
+    <sequenceFlow id="flow27" sourceRef="scripttask5" targetRef="exclusivegateway1"></sequenceFlow>
+    <sequenceFlow id="flow28" sourceRef="exclusivegateway1" targetRef="usertask2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!imrStats}]]></conditionExpression>
+    </sequenceFlow>
+    <serviceTask id="mailtask3" name="PTS to update DAR information" activiti:type="mail">
+      <extensionElements>
+        <activiti:field name="to">
+          <activiti:expression><![CDATA[${techSteward}]]></activiti:expression>
+        </activiti:field>
+        <activiti:field name="from">
+          <activiti:string><![CDATA[no-reply@collibra.com]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subject">
+          <activiti:string><![CDATA[Workflow Notifications]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="html">
+          <activiti:expression><![CDATA[A new <u>DAR Required Information</u> task has been assigned to you. The associated business item is <b><a href="${item.url}"> ${item.name}</a></b><br/><br/>
+
+Please enter the additional Information]]></activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow29" sourceRef="servicetask1" targetRef="mailtask3"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Collaboration">
+    <bpmndi:BPMNPlane bpmnElement="Collaboration" id="BPMNPlane_Collaboration">
+      <bpmndi:BPMNShape bpmnElement="pool1" id="BPMNShape_pool1">
+        <omgdc:Bounds height="323.0" width="1001.0" x="100.0" y="60.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane1" id="BPMNShape_lane1">
+        <omgdc:Bounds height="161.0" width="981.0" x="120.0" y="60.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="lane2" id="BPMNShape_lane2">
+        <omgdc:Bounds height="162.0" width="981.0" x="120.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="140.0" y="90.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
+        <omgdc:Bounds height="65.0" width="105.0" x="697.0" y="158.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="61.0" width="105.0" x="420.0" y="307.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="1060.0" y="319.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask2" id="BPMNShape_usertask2">
+        <omgdc:Bounds height="60.0" width="105.0" x="697.0" y="65.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="220.0" y="80.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask2" id="BPMNShape_servicetask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="420.0" y="230.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask2" id="BPMNShape_mailtask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="865.0" y="309.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask5" id="BPMNShape_servicetask5">
+        <omgdc:Bounds height="55.0" width="105.0" x="969.0" y="229.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask2" id="BPMNShape_scripttask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="600.0" y="309.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask4" id="BPMNShape_scripttask4">
+        <omgdc:Bounds height="55.0" width="105.0" x="520.0" y="80.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask5" id="BPMNShape_scripttask5">
+        <omgdc:Bounds height="55.0" width="105.0" x="897.0" y="80.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway1" id="BPMNShape_exclusivegateway1">
+        <omgdc:Bounds height="40.0" width="40.0" x="929.0" y="170.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="mailtask3" id="BPMNShape_mailtask3">
+        <omgdc:Bounds height="55.0" width="105.0" x="370.0" y="80.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="929.0" y="190.0"></omgdi:waypoint>
+        <omgdi:waypoint x="802.0" y="190.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="625.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="697.0" y="95.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="525.0" y="337.0"></omgdi:waypoint>
+        <omgdi:waypoint x="600.0" y="336.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
+        <omgdi:waypoint x="175.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="220.0" y="107.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
+        <omgdi:waypoint x="697.0" y="190.0"></omgdi:waypoint>
+        <omgdi:waypoint x="472.0" y="191.0"></omgdi:waypoint>
+        <omgdi:waypoint x="472.0" y="230.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
+        <omgdi:waypoint x="472.0" y="285.0"></omgdi:waypoint>
+        <omgdi:waypoint x="472.0" y="307.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow21" id="BPMNEdge_flow21">
+        <omgdi:waypoint x="917.0" y="309.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1021.0" y="284.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow19" id="BPMNEdge_flow19">
+        <omgdi:waypoint x="1021.0" y="284.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1077.0" y="319.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
+        <omgdi:waypoint x="475.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="520.0" y="107.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow25" id="BPMNEdge_flow25">
+        <omgdi:waypoint x="705.0" y="336.0"></omgdi:waypoint>
+        <omgdi:waypoint x="865.0" y="336.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14.0" width="50.0" x="740.0" y="340.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow26" id="BPMNEdge_flow26">
+        <omgdi:waypoint x="802.0" y="95.0"></omgdi:waypoint>
+        <omgdi:waypoint x="897.0" y="107.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow27" id="BPMNEdge_flow27">
+        <omgdi:waypoint x="949.0" y="135.0"></omgdi:waypoint>
+        <omgdi:waypoint x="949.0" y="170.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow28" id="BPMNEdge_flow28">
+        <omgdi:waypoint x="949.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="749.0" y="125.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow29" id="BPMNEdge_flow29">
+        <omgdi:waypoint x="325.0" y="107.0"></omgdi:waypoint>
+        <omgdi:waypoint x="370.0" y="107.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
